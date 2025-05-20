@@ -10,9 +10,10 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Random;
 
 public class SpotifyAPI implements Runnable {
-    private final String[] URLS = {"dsada"};
+    private final String[] ARTIST_IDS = {"3TVXtAsR1Inumwj472S9r4","1Xyo4u8uXC1ZmMpatF05PJ","6qqNVTkY8uBg9cP3Jd7DAH","0Y5tJX1MQlPlqiwlOH1tJY","0uj6QiPsPfK8ywLC7uwBE1"};
     private final String clientId = "62dd0a807d294e64b422e5c690465009";
     private final String clientSecret = "96c66b6d1c8e4a27b6ce1329aeba82f2";
     private HttpClient httpClient;
@@ -41,6 +42,7 @@ public class SpotifyAPI implements Runnable {
         String formData = "grant_type=client_credentials&client_id=" + clientId + "&client_secret=" + clientSecret;
         HttpRequest postRequest = buildPostRequest(formData);
         HttpResponse<String> postResponse = httpClient.send(postRequest, HttpResponse.BodyHandlers.ofString());
+        dataWriter.saveData(postResponse.body(), this.getClass().getSimpleName());
         return gson.fromJson(postResponse.body(), SpotifyInfo.class);
     }
 
@@ -60,7 +62,7 @@ public class SpotifyAPI implements Runnable {
 
     private HttpRequest buildGetRequest(String token) throws URISyntaxException {
         return HttpRequest.newBuilder()
-                .uri(new URI("https://api.spotify.com/v1/artists/0uj6QiPsPfK8ywLC7uwBE1?si=PurRJ_qLTlSAY5cGAhwO-Q"))
+                .uri(new URI("https://api.spotify.com/v1/artists/" + ARTIST_IDS[new Random().nextInt(ARTIST_IDS.length)]))
                 .header("Authorization", "Bearer " + token)
                 .build();
     }

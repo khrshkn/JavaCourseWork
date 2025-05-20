@@ -21,11 +21,12 @@ public class APIScraper {
 
     public void start()  {
         ExecutorService executor = Executors.newFixedThreadPool(maxThreads);
-        try
-        {
+        try {
             while (!Thread.currentThread().isInterrupted()) {
                 for (Runnable service : apiServices) {
-                    executor.submit(() -> executeService(service));
+                    executor.submit(() -> {
+                        service.run();
+                    });
                 }
                 TimeUnit.SECONDS.sleep(timeoutSeconds);
             }
@@ -33,14 +34,8 @@ public class APIScraper {
             Thread.currentThread().interrupt();
             // Logger
         } finally {
-            executor.shutdown();
+            executor.shutdownNow();
         }
-
-    }
-
-    private void executeService(Runnable service) {
-        Thread thread = new Thread(service);
-        thread.start();
     }
 
     private Runnable[] createApiServices(String[] serviceNames, DataWriter dataWriter) {
@@ -67,10 +62,8 @@ public class APIScraper {
 
         @Override
         public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-                String data = "{\"error\": \"Unknown service\"}";
-                dataWriter.saveData(data, serviceName);
-            }
+            String data = "{\"error\": \"Unknown service\"}";
+            dataWriter.saveData(data, serviceName);
         }
     }
 }

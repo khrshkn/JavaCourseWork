@@ -15,8 +15,8 @@ import java.util.concurrent.TimeUnit;
 public class AssemblyAPI implements Runnable {
     private final String BASE_URL = "https://api.assemblyai.com/v2/transcript";
     private final String API_KEY = "7e4eb56d88244cca9ed7900cfe9fa6b2";
-    private final String[] AUDIO_URL = {"https://drive.usercontent.google.com/u/0/uc?id=1Qs06m40Qld8Gkp9505tE2L1X7qs7g7RW&export=download",
-                                        "https://drive.usercontent.google.com/u/0/uc?id=1ZAYI7cM6ixD0aC-EsKdUaSHPHhHwyT-N&export=download",
+    private final String[] AUDIO_URL = {"https://drive.usercontent.google.com/u/0/uc?id=19TH3BKpdgIE2_ZMhx9rDRLDzfLLjhb4b&export=download",
+                                        "https://drive.usercontent.google.com/u/0/uc?id=1Qs06m40Qld8Gkp9505tE2L1X7qs7g7RW&export=download",
                                         "https://assembly.ai/wildfires.mp3"};
     private DataWriter dataWriter;
     private HttpClient httpClient;

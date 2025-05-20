@@ -1,11 +1,38 @@
 package khoroshkin.coursework;
 
 public class SpotifyInfo {
+    private String spotify;
+    private String type;
     private String access_token;
     private String id;
     private String name;
+    private String href;
     private String popularity;
     private String[] genres;
+
+    public String getSpotify() {
+        return spotify;
+    }
+
+    public void setSpotify(String spotify) {
+        this.spotify = spotify;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getHref() {
+        return href;
+    }
+
+    public void setHref(String href) {
+        this.href = href;
+    }
 
     public String getId() {
         return id;

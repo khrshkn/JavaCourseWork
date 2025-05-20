@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -13,12 +12,12 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class VirusTotalAPI implements Runnable {
     private final String API_KEY = "4d3f67e12235c13d4c7c71ea885699da2cfea1e4b4f6d35a1561b351386474a0";
+    private final String FILE_PATH = "trojan.txt";
     private HttpClient httpClient;
     private Gson gson;
     private DataWriter dataWriter;
@@ -63,8 +62,7 @@ public class VirusTotalAPI implements Runnable {
     }
 
     private String createMultipart(String boundary) throws IOException {
-        Path filePath = Path.of("ff.txt");
-
+        Path filePath = Path.of(FILE_PATH);
         byte[] fileBytes = Files.readAllBytes(filePath);
 
         String multipartBody = "--" + boundary + "\r\n" +
@@ -76,13 +74,8 @@ public class VirusTotalAPI implements Runnable {
     }
 
     private String getFileAnalysis(String requestId) throws URISyntaxException, IOException, InterruptedException {
-        /*HttpRequest getRequest = buildGetRequest(requestId);
-        HttpResponse<String> getResponce = httpClient.send(getRequest, HttpResponse.BodyHandlers.ofString());
-        Analysis analysis = gson.fromJson(getResponce.body(), Analysis.class);
-        return getResponce.body();*/
         HttpRequest getRequest = buildGetRequest(requestId);
         HttpResponse<String> getResponse = httpClient.send(getRequest, HttpResponse.BodyHandlers.ofString());
-
         JsonObject fullResponse = gson.fromJson(getResponse.body(), JsonObject.class);
         JsonObject data = fullResponse.getAsJsonObject("data");
 
