@@ -1,5 +1,8 @@
 package khoroshkin.coursework;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -7,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class APIScraper {
+    private static final Logger logger = LogManager.getLogger(APIScraper.class);
     private final int maxThreads;
     private final int timeoutSeconds;
     private final Runnable[] apiServices;
@@ -17,6 +21,7 @@ public class APIScraper {
         this.timeoutSeconds = timeoutSeconds;
         this.dataWriter = new DataWriter(outputFormat);
         this.apiServices = createApiServices(serviceNames, dataWriter);
+        logger.info("API services created");
     }
 
     public void start()  {
@@ -32,9 +37,9 @@ public class APIScraper {
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            // Logger
+            logger.error("Interrupted while waiting for tasks to complete", e);
         } finally {
-            executor.shutdownNow();
+            executor.shutdown();
         }
     }
 
@@ -63,6 +68,7 @@ public class APIScraper {
         @Override
         public void run() {
             String data = "{\"error\": \"Unknown service\"}";
+            logger.warn("Unknown service requested: " + serviceName);
             dataWriter.saveData(data, serviceName);
         }
     }

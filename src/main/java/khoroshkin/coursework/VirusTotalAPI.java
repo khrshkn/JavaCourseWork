@@ -1,5 +1,8 @@
 package khoroshkin.coursework;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -16,6 +19,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class VirusTotalAPI implements Runnable {
+    private static final Logger logger = LogManager.getLogger(VirusTotalAPI.class);
     private final String API_KEY = "4d3f67e12235c13d4c7c71ea885699da2cfea1e4b4f6d35a1561b351386474a0";
     private final String FILE_PATH = "trojan.txt";
     private HttpClient httpClient;
@@ -34,9 +38,10 @@ public class VirusTotalAPI implements Runnable {
             String requestId = requestPostFile();
             String result = getFileAnalysis(requestId);
             dataWriter.saveData(result, this.getClass().getSimpleName());
+            logger.info("Successfully fetched and saved data for VirusTotalAPI");
         } catch (URISyntaxException | IOException | InterruptedException e) {
             Thread.currentThread().interrupt();
-            // Logger
+            logger.error("Failed to fetch data from VirusTotal API", e);
         }
     }
 

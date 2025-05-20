@@ -1,5 +1,7 @@
 package khoroshkin.coursework;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -13,6 +15,7 @@ import java.net.http.HttpResponse;
 import java.util.Random;
 
 public class SpotifyAPI implements Runnable {
+    private static final Logger logger = LogManager.getLogger(SpotifyAPI.class);
     private final String[] ARTIST_IDS = {"3TVXtAsR1Inumwj472S9r4","1Xyo4u8uXC1ZmMpatF05PJ","6qqNVTkY8uBg9cP3Jd7DAH","0Y5tJX1MQlPlqiwlOH1tJY","0uj6QiPsPfK8ywLC7uwBE1"};
     private final String clientId = "62dd0a807d294e64b422e5c690465009";
     private final String clientSecret = "96c66b6d1c8e4a27b6ce1329aeba82f2";
@@ -33,8 +36,10 @@ public class SpotifyAPI implements Runnable {
             SpotifyInfo artistData = requestArtistData(info.getAccess_token());
             String result = gson.toJson(artistData);
             dataWriter.saveData(result, this.getClass().getSimpleName());
+            logger.info("Successfully fetched and saved data for SpotifyAPI");
         } catch (URISyntaxException | IOException | InterruptedException e) {
-            // Logger
+            Thread.currentThread().interrupt();
+            logger.error("Failed to fetch data from Spotify API", e);
         }
     }
 

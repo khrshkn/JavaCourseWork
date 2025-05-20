@@ -1,5 +1,8 @@
 package khoroshkin.coursework;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -13,13 +16,13 @@ import java.io.IOException;
 import java.util.*;
 
 public class DataWriter {
+    private static final Logger logger = LogManager.getLogger(DataWriter.class);
     private final File outputFile;
     private final String outputFormat;
     private final ObjectMapper jsonMapper;
     private final CsvMapper csvMapper;
     private int idCounter = 1;
     private boolean isFirstWrite = true;
-
 
     public DataWriter(String outputFormat) {
         this.outputFormat = outputFormat;
@@ -28,20 +31,21 @@ public class DataWriter {
         this.csvMapper = new CsvMapper();
         try (FileWriter writer = new FileWriter(outputFile)) {
             writer.write("{\n");
+            logger.info("Output file initialized: {}", outputFile.getAbsolutePath());
         } catch (IOException e) {
-            // Logger
+            logger.error("Failed to initialize output file", e);
         }
     }
 
     public synchronized void saveData(String data, String serviceName) {
         try {
-            if (outputFormat.equals("json")) {
+            if ("json".equalsIgnoreCase(outputFormat)) {
                 saveJsonData(data, serviceName);
-            } else if (outputFormat.equals("csv")) {
+            } else if ("csv".equalsIgnoreCase(outputFormat)){
                 saveCsvData(data, serviceName);
             }
         } catch (IOException e) {
-            // Logger
+            logger.error("Failed to save data for service: {}", serviceName, e);
         }
     }
 
@@ -80,34 +84,45 @@ public class DataWriter {
             String responseId = field.getKey();
             JsonNode responseData = field.getValue();
 
-            ObjectNode enrichedData = jsonMapper.createObjectNode();
-            enrichedData.put("response_id", responseId);
+            ObjectNode flattenedData = jsonMapper.createObjectNode();
+            flattenedData.put("response_id", responseId);
             String extractedServiceName = responseId.substring(responseId.indexOf("(") + 1, responseId.length() - 1);
-            enrichedData.put("service_name", extractedServiceName);
+            flattenedData.put("service_name", extractedServiceName);
 
             Iterator<Map.Entry<String, JsonNode>> responseFields = responseData.fields();
             while (responseFields.hasNext()) {
                 Map.Entry<String, JsonNode> responseField = responseFields.next();
-                enrichedData.put(responseField.getKey(), responseField.getValue());
-            }
+                String key = responseField.getKey();
+                JsonNode value = responseField.getValue();
 
-            responsesArray.add(enrichedData);
-        }
-
-
-        Set<String> otherFields = new HashSet<>();
-        for (JsonNode node : responsesArray) {
-            node.fieldNames().forEachRemaining(fieldName -> {
-                if (!fieldName.equals("response_id") && !fieldName.equals("service_name")) {
-                    otherFields.add(fieldName);
+                if (value.isObject()) {
+                    Iterator<Map.Entry<String, JsonNode>> nestedFields = value.fields();
+                    while (nestedFields.hasNext()) {
+                        Map.Entry<String, JsonNode> nestedField = nestedFields.next();
+                        String nestedKey = key + "_" + nestedField.getKey();
+                        flattenedData.put(nestedKey, nestedField.getValue().asText());
+                    }
+                } else {
+                    flattenedData.put(key, value.asText());
                 }
-            });
+            }
+            responsesArray.add(flattenedData);
         }
+
+        Set<String> allFields = new TreeSet<>();
+        for (JsonNode node : responsesArray) {
+            node.fieldNames().forEachRemaining(allFields::add);
+        }
+
+        List<String> orderedColumns = new ArrayList<>();
+        orderedColumns.add("response_id");
+        orderedColumns.add("service_name");
+        allFields.remove("response_id");
+        allFields.remove("service_name");
+        orderedColumns.addAll(allFields);
 
         CsvSchema.Builder csvSchemaBuilder = CsvSchema.builder();
-        csvSchemaBuilder.addColumn("response_id");
-        csvSchemaBuilder.addColumn("service_name");
-        otherFields.forEach(csvSchemaBuilder::addColumn);
+        orderedColumns.forEach(csvSchemaBuilder::addColumn);
         CsvSchema csvSchema = csvSchemaBuilder.build().withHeader();
 
         csvMapper.writerFor(JsonNode.class)

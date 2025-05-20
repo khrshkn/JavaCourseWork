@@ -1,5 +1,8 @@
 package khoroshkin.coursework;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -13,6 +16,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class AssemblyAPI implements Runnable {
+    private static final Logger logger = LogManager.getLogger(AssemblyAPI.class);
     private final String BASE_URL = "https://api.assemblyai.com/v2/transcript";
     private final String API_KEY = "7e4eb56d88244cca9ed7900cfe9fa6b2";
     private final String[] AUDIO_URL = {"https://drive.usercontent.google.com/u/0/uc?id=19TH3BKpdgIE2_ZMhx9rDRLDzfLLjhb4b&export=download",
@@ -34,9 +38,10 @@ public class AssemblyAPI implements Runnable {
             Transcript transcript = createTranscriptRequest();
             String result = getTranscription(transcript.getId());
             dataWriter.saveData(result, this.getClass().getSimpleName());
+            logger.info("Successfully fetched and saved data for Assembly API");
         } catch (URISyntaxException | IOException | InterruptedException e) {
             Thread.currentThread().interrupt();
-            // Logger
+            logger.error("Failed to fetch data from Assembly API", e);
         }
     }
 

@@ -5,10 +5,19 @@ public class SpotifyInfo {
     private String type;
     private String access_token;
     private String id;
+    private Follow followers;
     private String name;
     private String href;
     private String popularity;
     private String[] genres;
+
+    public Follow getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(Follow followers) {
+        this.followers = followers;
+    }
 
     public String getSpotify() {
         return spotify;
@@ -72,5 +81,16 @@ public class SpotifyInfo {
 
     public void setAccess_token(String access_token) {
         this.access_token = access_token;
+    }
+    private class Follow {
+        private String total;
+
+        public String getTotal() {
+            return total;
+        }
+
+        public void setTotal(String total) {
+            this.total = total;
+        }
     }
 }
