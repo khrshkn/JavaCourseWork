@@ -43,7 +43,7 @@ public class APIScraper {
         }
     }
 
-    private Runnable[] createApiServices(String[] serviceNames, DataWriter dataWriter) {
+    Runnable[] createApiServices(String[] serviceNames, DataWriter dataWriter) {
         Map<String, Runnable> serviceMap = new HashMap<>();
         serviceMap.put("spotify", new SpotifyAPI(dataWriter));
         serviceMap.put("assembly", new AssemblyAPI(dataWriter));
@@ -56,7 +56,7 @@ public class APIScraper {
         return services;
     }
 
-    private static class UnknownAPIService implements Runnable {
+    static class UnknownAPIService implements Runnable {
         private final String serviceName;
         private final DataWriter dataWriter;
 
