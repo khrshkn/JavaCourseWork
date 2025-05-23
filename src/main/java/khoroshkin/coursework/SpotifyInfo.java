@@ -82,7 +82,7 @@ public class SpotifyInfo {
     public void setAccess_token(String access_token) {
         this.access_token = access_token;
     }
-    private class Follow {
+    class Follow {
         private String total;
 
         public String getTotal() {

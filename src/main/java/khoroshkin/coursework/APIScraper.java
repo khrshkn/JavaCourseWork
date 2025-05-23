@@ -25,21 +25,16 @@ public class APIScraper {
     }
 
     public void start()  {
-        ExecutorService executor = Executors.newFixedThreadPool(maxThreads);
-        try {
+        try (ExecutorService executor = Executors.newFixedThreadPool(maxThreads)){
             while (!Thread.currentThread().isInterrupted()) {
                 for (Runnable service : apiServices) {
-                    executor.submit(() -> {
-                        service.run();
-                    });
+                    executor.execute(service);
                 }
                 TimeUnit.SECONDS.sleep(timeoutSeconds);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.error("Interrupted while waiting for tasks to complete", e);
-        } finally {
-            executor.shutdown();
         }
     }
 
@@ -68,7 +63,7 @@ public class APIScraper {
         @Override
         public void run() {
             String data = "{\"error\": \"Unknown service\"}";
-            logger.warn("Unknown service requested: " + serviceName);
+            logger.warn("Unknown service requested: {}", serviceName);
             dataWriter.saveData(data, serviceName);
         }
     }

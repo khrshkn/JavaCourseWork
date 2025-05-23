@@ -20,11 +20,18 @@ import java.util.concurrent.TimeUnit;
 
 public class VirusTotalAPI implements Runnable {
     private static final Logger logger = LogManager.getLogger(VirusTotalAPI.class);
+    private final String ENDPOINT_URL = "https://www.virustotal.com/api/v3/analyses";
     private final String API_KEY = "4d3f67e12235c13d4c7c71ea885699da2cfea1e4b4f6d35a1561b351386474a0";
     private final String FILE_PATH = "trojan.txt";
     private HttpClient httpClient;
     private Gson gson;
     private DataWriter dataWriter;
+
+    public VirusTotalAPI(HttpClient httpClient, Gson gson, DataWriter dataWriter) {
+        this.httpClient = httpClient;
+        this.gson = gson;
+        this.dataWriter = dataWriter;
+    }
 
     public VirusTotalAPI(DataWriter dataWriter) {
         this.httpClient = HttpClient.newHttpClient();
@@ -35,17 +42,17 @@ public class VirusTotalAPI implements Runnable {
     @Override
     public void run() {
         try {
-            String requestId = requestPostFile();
+            String requestId = buildPostRequest();
             String result = getFileAnalysis(requestId);
             dataWriter.saveData(result, this.getClass().getSimpleName());
             logger.info("Successfully fetched and saved data for VirusTotalAPI");
-        } catch (URISyntaxException | IOException | InterruptedException e) {
+        } catch (URISyntaxException | IOException |  NullPointerException | InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.error("Failed to fetch data from VirusTotal API", e);
         }
     }
 
-    private String requestPostFile() throws URISyntaxException, IOException, InterruptedException, NullPointerException {
+    protected String buildPostRequest() throws URISyntaxException, IOException, InterruptedException, NullPointerException {
         String boundary = UUID.randomUUID().toString();
         String multipartBody = createMultipart(boundary);
 
@@ -61,12 +68,12 @@ public class VirusTotalAPI implements Runnable {
         Analysis analysis = gson.fromJson(response.body(), Analysis.class);
         if (analysis.getError() != null) {
             TimeUnit.SECONDS.sleep(3);
-            requestPostFile();
+            buildPostRequest();
         }
         return analysis.getData().getId();
     }
 
-    private String createMultipart(String boundary) throws IOException {
+    protected String createMultipart(String boundary) throws IOException {
         Path filePath = Path.of(FILE_PATH);
         byte[] fileBytes = Files.readAllBytes(filePath);
 
@@ -106,7 +113,7 @@ public class VirusTotalAPI implements Runnable {
 
     private HttpRequest buildGetRequest(String id) {
         return HttpRequest.newBuilder()
-                .uri(URI.create("https://www.virustotal.com/api/v3/analyses/" + id))
+                .uri(URI.create(ENDPOINT_URL + "/" + id))
                 .header("accept", "application/json")
                 .header("x-apikey", API_KEY)
                 .build();
