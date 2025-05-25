@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class APIScraper {
+public class APIScraper implements Runnable{
     private static final Logger logger = LogManager.getLogger(APIScraper.class);
     private final int maxThreads;
     private final int timeoutSeconds;
@@ -24,7 +24,8 @@ public class APIScraper {
         logger.info("API services created");
     }
 
-    public void start()  {
+    @Override
+    public void run()  {
         try (ExecutorService executor = Executors.newFixedThreadPool(maxThreads)){
             while (!Thread.currentThread().isInterrupted()) {
                 for (Runnable service : apiServices) {

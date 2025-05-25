@@ -7,24 +7,26 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class AssemblyAPI implements Runnable {
     private static final Logger logger = LogManager.getLogger(AssemblyAPI.class);
     private final String ENDPOINT_URL = "https://api.assemblyai.com/v2/transcript";
-    private final String API_KEY = "7e4eb56d88244cca9ed7900cfe9fa6b2";
+    private final String API_KEY = System.getenv("ASSEMBLYAI_API_KEY");
     private final String[] AUDIO_URL = {"https://drive.usercontent.google.com/u/0/uc?id=19TH3BKpdgIE2_ZMhx9rDRLDzfLLjhb4b&export=download",
                                         "https://drive.usercontent.google.com/u/0/uc?id=1Qs06m40Qld8Gkp9505tE2L1X7qs7g7RW&export=download",
                                         "https://assembly.ai/wildfires.mp3"};
-    private DataWriter dataWriter;
-    private HttpClient httpClient;
-    private Gson gson;
+    private final DataWriter dataWriter;
+    private final HttpClient httpClient;
+    private final Gson gson;
 
     public AssemblyAPI(HttpClient httpClient, Gson gson, DataWriter dataWriter) {
         this.httpClient = httpClient;
@@ -37,6 +39,7 @@ public class AssemblyAPI implements Runnable {
         this.gson = new GsonBuilder().disableHtmlEscaping().create();
         this.dataWriter = dataWriter;
     }
+
 
     @Override
     public void run() {
@@ -59,8 +62,11 @@ public class AssemblyAPI implements Runnable {
         HttpRequest postRequest = buildPostRequest(jsonRequest);
 
         HttpResponse<String> postResponse = httpClient.send(postRequest, HttpResponse.BodyHandlers.ofString());
-        Transcript responce = gson.fromJson(postResponse.body(), Transcript.class);
-        dataWriter.saveData(gson.toJson(responce), this.getClass().getSimpleName());
+        if (postResponse.statusCode() != 200) {
+            throw new IOException(postResponse.body());
+        }
+        Transcript response = gson.fromJson(postResponse.body(), Transcript.class);
+        dataWriter.saveData(gson.toJson(response), this.getClass().getSimpleName());
         return gson.fromJson(postResponse.body(), Transcript.class);
     }
 
@@ -78,6 +84,9 @@ public class AssemblyAPI implements Runnable {
 
         while (true) {
             HttpResponse<String> getResponse = httpClient.send(getRequest, HttpResponse.BodyHandlers.ofString());
+            if (getResponse.statusCode() != 200) {
+                throw new IOException(getResponse.body());
+            }
             Transcript transcript = gson.fromJson(getResponse.body(), Transcript.class);
 
             if (transcript.getStatus().equals("completed") || transcript.getStatus().equals("error")) {

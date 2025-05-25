@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
     private static final Logger logger = LogManager.getLogger(Main.class);
@@ -11,8 +12,11 @@ public class Main {
         try {
             Arguments parsedArgs = processArguments(args);
             APIScraper scraper = new APIScraper(parsedArgs.numThreads, parsedArgs.timeout, parsedArgs.services, parsedArgs.format);
-            scraper.start();
-        } catch (IllegalArgumentException e) {
+            Thread taskThread = new Thread(scraper);
+            taskThread.start();
+            TimeUnit.SECONDS.sleep(200);
+            taskThread.interrupt();
+        } catch (IllegalArgumentException | InterruptedException e) {
             logger.error("Invalid arguments provided", e);
             System.exit(1);
         }
@@ -33,7 +37,7 @@ public class Main {
     }
 
     static Arguments processArguments(String[] args) {
-        if (args.length < 1) {
+        if (args.length < 4) {
             throw new IllegalArgumentException("Required format: java -cp src/main/java khoroshkin.coursework.Main <threads> <timeout> <service1> [service2...] <format>\n" +
                     "Example: java -cp src/main/java khoroshkin.coursework.Main 3 20 spotify assembly virustotal json");
         }

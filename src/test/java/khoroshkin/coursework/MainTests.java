@@ -49,7 +49,7 @@ public class MainTests {
     }
 
     @Test
-    void testCreateApiServices() {
+    void test_CreateApiServices() {
         String[] serviceNames = {"spotify", "assembly", "virustotal", "unknown"};
         DataWriter dataWriter = mock(DataWriter.class);
         APIScraper scraper = new APIScraper(1, 1, serviceNames, "json");

@@ -21,11 +21,11 @@ import java.util.concurrent.TimeUnit;
 public class VirusTotalAPI implements Runnable {
     private static final Logger logger = LogManager.getLogger(VirusTotalAPI.class);
     private final String ENDPOINT_URL = "https://www.virustotal.com/api/v3/analyses";
-    private final String API_KEY = "4d3f67e12235c13d4c7c71ea885699da2cfea1e4b4f6d35a1561b351386474a0";
+    private final String API_KEY = System.getenv("VIRUSTOTAL_API_KEY");;
     private final String FILE_PATH = "trojan.txt";
-    private HttpClient httpClient;
-    private Gson gson;
-    private DataWriter dataWriter;
+    private final HttpClient httpClient;
+    private final Gson gson;
+    private final DataWriter dataWriter;
 
     public VirusTotalAPI(HttpClient httpClient, Gson gson, DataWriter dataWriter) {
         this.httpClient = httpClient;
@@ -66,6 +66,9 @@ public class VirusTotalAPI implements Runnable {
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         Analysis analysis = gson.fromJson(response.body(), Analysis.class);
+        if (response.statusCode() != 200) {
+            throw new IOException(response.body());
+        }
         if (analysis.getError() != null) {
             TimeUnit.SECONDS.sleep(3);
             buildPostRequest();
@@ -88,6 +91,9 @@ public class VirusTotalAPI implements Runnable {
     private String getFileAnalysis(String requestId) throws URISyntaxException, IOException, InterruptedException {
         HttpRequest getRequest = buildGetRequest(requestId);
         HttpResponse<String> getResponse = httpClient.send(getRequest, HttpResponse.BodyHandlers.ofString());
+        if (getResponse.statusCode() != 200) {
+            throw new IOException(getResponse.body());
+        }
         JsonObject fullResponse = gson.fromJson(getResponse.body(), JsonObject.class);
         JsonObject data = fullResponse.getAsJsonObject("data");
 

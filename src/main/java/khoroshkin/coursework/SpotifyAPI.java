@@ -19,10 +19,10 @@ public class SpotifyAPI implements Runnable {
     private final String ENDPOINT_URL = "https://api.spotify.com/v1/artists";
     private final String[] ARTIST_IDS = {"3TVXtAsR1Inumwj472S9r4","1Xyo4u8uXC1ZmMpatF05PJ","6qqNVTkY8uBg9cP3Jd7DAH",
                                         "0Y5tJX1MQlPlqiwlOH1tJY","0uj6QiPsPfK8ywLC7uwBE1"};
-    private final String clientId = "62dd0a807d294e64b422e5c690465009";
-    private final String clientSecret = "96c66b6d1c8e4a27b6ce1329aeba82f2";
-    private HttpClient httpClient;
-    private Gson gson;
+    private final String clientId = System.getenv("SPOTIFY_CLIENTID");
+    private final String clientSecret = System.getenv("SPOTIFY_CLIENTSECRET");
+    private final HttpClient httpClient;
+    private final Gson gson;
     DataWriter dataWriter;
 
     public SpotifyAPI(HttpClient httpClient, Gson gson, DataWriter dataWriter) {
@@ -55,6 +55,9 @@ public class SpotifyAPI implements Runnable {
         String formData = "grant_type=client_credentials&client_id=" + clientId + "&client_secret=" + clientSecret;
         HttpRequest postRequest = buildPostRequest(formData);
         HttpResponse<String> postResponse = httpClient.send(postRequest, HttpResponse.BodyHandlers.ofString());
+        if (postResponse.statusCode() != 200) {
+            throw new IOException(postResponse.body());
+        }
         dataWriter.saveData(postResponse.body(), this.getClass().getSimpleName());
         return gson.fromJson(postResponse.body(), SpotifyInfo.class);
     }
@@ -69,8 +72,11 @@ public class SpotifyAPI implements Runnable {
 
     private SpotifyInfo requestArtistData(String token) throws URISyntaxException, IOException, InterruptedException {
         HttpRequest getRequest = buildGetRequest(token);
-        HttpResponse<String> getResponce = httpClient.send(getRequest, HttpResponse.BodyHandlers.ofString());
-        return gson.fromJson(getResponce.body(), SpotifyInfo.class);
+        HttpResponse<String> getResponse = httpClient.send(getRequest, HttpResponse.BodyHandlers.ofString());
+        if (getResponse.statusCode() != 200) {
+            throw new IOException(getResponse.body());
+        }
+        return gson.fromJson(getResponse.body(), SpotifyInfo.class);
     }
 
     private HttpRequest buildGetRequest(String token) throws URISyntaxException {
